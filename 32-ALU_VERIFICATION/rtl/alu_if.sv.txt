@@ -1,0 +1,22 @@
+
+interface alu_if(input logic clk_i, input logic rst_i);
+        logic [31:0] dataA_i;
+        logic [31:0] dataB_i;
+        logic [2:0] ALUCtrl_i;
+        logic [31:0] ALUResult_o;
+        logic Zero_o;
+
+clocking cb_drv @(posedge clk_i);
+default input #1 output #1;
+output dataA_i, dataB_i, ALUCtrl_i;
+endclocking
+
+clocking cb_mon @(posedge clk_i);
+default input #1 output #1;
+input dataA_i, dataB_i, ALUCtrl_i;
+input ALUResult_o, Zero_o;
+endclocking
+
+modport DRV(clocking cb_drv,input clk_i, input rst_i);
+modport MON(clocking cb_mon, input clk_i, input rst_i);
+endinterface

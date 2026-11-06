@@ -1,0 +1,46 @@
+
+module top;
+  import uvm_pkg::*;
+  import alu_pkg::*;
+
+  logic clk_i = 0;
+  logic rst_i;
+
+  always #5 clk_i = ~clk_i;
+
+  initial begin
+    rst_i = 1;
+    #12;
+    rst_i = 0;
+  end
+
+  alu_if vif (.clk_i(clk_i), .rst_i(rst_i));
+
+  alu_top dut (
+    .clk_i(vif.clk_i),
+    .rst_i(vif.rst_i),
+    .dataA_i(vif.dataA_i),
+    .dataB_i(vif.dataB_i),
+    .ALUCtrl_i(vif.ALUCtrl_i),
+    .ALUResult_o(vif.ALUResult_o),
+    .Zero_o(vif.Zero_o)
+  );
+
+
+  bind dut alu_sva sva_inst (
+    .clk_i(vif.clk_i),
+    .rst_i(vif.rst_i),
+    .dataA_i(vif.dataA_i),
+    .dataB_i(vif.dataB_i),
+    .ALUCtrl_i(vif.ALUCtrl_i),
+    .ALUResult_o(vif.ALUResult_o),
+    .Zero_o(vif.Zero_o)
+  );
+
+
+  initial begin
+    uvm_config_db #(virtual alu_if)::set(null, "*", "vif", vif);
+    run_test();
+  end
+
+endmodule

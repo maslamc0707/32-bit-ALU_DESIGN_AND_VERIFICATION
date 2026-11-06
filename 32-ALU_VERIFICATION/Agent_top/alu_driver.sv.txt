@@ -1,0 +1,38 @@
+
+class alu_driver extends uvm_driver #(alu_xtn);
+  `uvm_component_utils(alu_driver)
+
+  virtual alu_if.DRV vif;
+  alu_agent_config m_cfg;
+
+  function new (string name = "alu_driver", uvm_component parent);
+    super.new(name, parent);
+  endfunction
+
+  virtual function void build_phase (uvm_phase phase);
+    super.build_phase(phase);
+
+    if (!uvm_config_db #(alu_agent_config)::get(this, "", "agent_config", m_cfg))
+      `uvm_fatal("DRV", "failed to get")
+
+    vif = m_cfg.vif;
+  endfunction
+
+  virtual task run_phase (uvm_phase phase);
+    wait (vif.rst_i == 1'b0);
+    forever begin
+      seq_item_port.get_next_item(req);
+      send_to_dut(req);
+      seq_item_port.item_done();
+    end
+  endtask
+
+  virtual task send_to_dut (alu_xtn req);
+    @(vif.cb_drv);
+    vif.cb_drv.dataA_i <= req.dataA_i;
+    vif.cb_drv.dataB_i <= req.dataB_i;
+    vif.cb_drv.ALUCtrl_i <= req.ALUCtrl_i;
+    @(vif.cb_drv);
+  endtask
+
+endclass

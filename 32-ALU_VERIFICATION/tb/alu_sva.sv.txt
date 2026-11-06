@@ -1,0 +1,61 @@
+
+module alu_sva (
+  input logic clk_i,
+  input logic rst_i,
+  input logic [31:0] dataA_i,
+  input logic [31:0] dataB_i,
+  input logic [2:0] ALUCtrl_i,
+  input logic [31:0] ALUResult_o,
+  input logic Zero_o
+);
+
+  property p_reset;
+    @(posedge clk_i) rst_i |=> (ALUResult_o == 32'b0) && (Zero_o == 1'b1);
+  endproperty
+
+  assert_reset : assert property (p_reset);
+
+$info("PASS: RESET Assertion Passed Successfully");
+
+
+  property p_add;
+    @(posedge clk_i) disable iff (rst_i)
+    (ALUCtrl_i == 3'b010) |=> (ALUResult_o == ($past(dataA_i) + $past(dataB_i)));
+  endproperty
+
+  assert_add : assert property (p_add);
+
+$info("PASS: ADD Assertion Passed Successfully");
+
+
+
+  property p_sub;
+    @(posedge clk_i) disable iff (rst_i)
+    (ALUCtrl_i == 3'b110) |=> (ALUResult_o == ($past(dataA_i) - $past(dataB_i)));
+  endproperty
+
+  assert_sub : assert property (p_sub);
+
+$info("PASS: SUB Assertion Passed Successfully");
+
+
+  property p_zero_flag;
+    @(posedge clk_i) disable iff (rst_i)
+    (ALUResult_o == 32'b0) |-> (Zero_o == 1'b1);
+  endproperty
+
+  assert_zero_flag : assert property (p_zero_flag);
+
+$info("PASS: ZERO Assertion Passed Successfully");
+
+
+  property p_non_zero_flag;
+    @(posedge clk_i) disable iff (rst_i)
+    (ALUResult_o != 32'b0) |-> (Zero_o == 1'b0);
+  endproperty
+
+  assert_non_zero_flag : assert property (p_non_zero_flag);
+
+$info("PASS: NON_ZERO Assertion Passed Successfully");
+
+endmodule

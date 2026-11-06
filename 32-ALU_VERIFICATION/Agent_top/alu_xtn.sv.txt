@@ -1,0 +1,27 @@
+
+class alu_xtn extends uvm_sequence_item;
+
+
+        rand bit [31:0] dataA_i;
+        rand bit [31:0] dataB_i;
+        rand bit [2:0] ALUCtrl_i;
+        bit [31:0] ALUResult_o;
+        bit Zero_o;
+
+constraint valid_ops {
+        ALUCtrl_i inside {3'b010,3'b110,3'b000,3'b001,3'b011,3'b100};
+                        }
+
+`uvm_object_utils_begin(alu_xtn)
+`uvm_field_int(dataA_i, UVM_ALL_ON)
+`uvm_field_int(dataB_i, UVM_ALL_ON)
+`uvm_field_int(ALUCtrl_i, UVM_ALL_ON)
+`uvm_field_int(ALUResult_o, UVM_ALL_ON)
+`uvm_field_int(Zero_o, UVM_ALL_ON)
+`uvm_object_utils_end
+
+function new(string name="alu_xtn");
+        super.new(name);
+endfunction
+
+endclass

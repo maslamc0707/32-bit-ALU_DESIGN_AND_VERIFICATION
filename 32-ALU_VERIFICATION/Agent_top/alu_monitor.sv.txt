@@ -1,0 +1,43 @@
+
+class alu_monitor extends uvm_monitor;
+  `uvm_component_utils(alu_monitor)
+
+  virtual alu_if.MON vif;
+  alu_agent_config m_cfg;
+  uvm_analysis_port #(alu_xtn) ap;
+
+  function new (string name, uvm_component parent);
+    super.new(name, parent);
+    ap = new("ap", this);
+  endfunction
+
+  virtual function void build_phase (uvm_phase phase);
+    super.build_phase(phase);
+
+    if (!uvm_config_db #(alu_agent_config)::get(this, "", "agent_config", m_cfg))
+      `uvm_fatal("MON", "faild to get")
+
+    vif = m_cfg.vif;
+  endfunction
+
+  virtual task run_phase (uvm_phase phase);
+    wait (vif.rst_i == 1'b0);
+    forever begin
+      collect_data();
+    end
+  endtask
+
+  virtual task collect_data();
+    alu_xtn xtn;
+    xtn = alu_xtn::type_id::create("xtn");
+
+ @(vif.cb_mon);
+    xtn.dataA_i = vif.cb_mon.dataA_i;
+    xtn.dataB_i = vif.cb_mon.dataB_i;
+    xtn.ALUCtrl_i = vif.cb_mon.ALUCtrl_i;
+    @(vif.cb_mon);
+    xtn.ALUResult_o = vif.cb_mon.ALUResult_o;
+    xtn.Zero_o = vif.cb_mon.Zero_o;
+    ap.write(xtn);
+  endtask
+endclass

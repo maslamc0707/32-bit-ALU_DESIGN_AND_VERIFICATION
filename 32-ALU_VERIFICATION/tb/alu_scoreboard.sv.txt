@@ -1,0 +1,64 @@
+
+class alu_scoreboard extends uvm_scoreboard;
+  `uvm_component_utils(alu_scoreboard)
+
+  uvm_analysis_imp #(alu_xtn, alu_scoreboard) ap_imp;
+
+alu_xtn cov_xtn;
+
+covergroup alu_cg;
+        option.per_instance = 1;
+
+cp_op: coverpoint cov_xtn.ALUCtrl_i {
+        bins add_op = {3'b010};
+        bins sub_op = {3'b110};
+        bins and_op = {3'b000};
+        bins or_op = {3'b001};
+        bins xor_op = {3'b011};
+        bins nor_op = {3'b100};
+}
+
+cp_zero: coverpoint cov_xtn.Zero_o {
+        bins zero_high = {1'b1};
+        bins zero_low = {1'b0};
+}
+
+cross_op_zero: cross cp_op, cp_zero;
+endgroup
+
+  function new (string name, uvm_component parent);
+    super.new(name, parent);
+    ap_imp = new("ap_imp", this);
+    alu_cg = new();
+  endfunction
+
+  virtual function void write(alu_xtn xtn);
+    bit [31:0] exp_result;
+    bit exp_zero;
+
+    case (xtn.ALUCtrl_i)
+      3'b010: exp_result = xtn.dataA_i + xtn.dataB_i;
+      3'b110: exp_result = xtn.dataA_i - xtn.dataB_i;
+      3'b000: exp_result = xtn.dataA_i & xtn.dataB_i;
+      3'b001: exp_result = xtn.dataA_i | xtn.dataB_i;
+      3'b011: exp_result = xtn.dataA_i ^ xtn.dataB_i;
+      3'b100: exp_result = ~(xtn.dataA_i | xtn.dataB_i);
+      default: exp_result = 32'b0;
+    endcase
+
+    exp_zero = (exp_result == 32'b0) ? 1'b1 : 1'b0;
+
+    if ((exp_result == xtn.ALUResult_o) && (exp_zero == xtn.Zero_o))begin
+      `uvm_info("SCB_PASS", $sformatf("PASS  ctol = %0d A = %0d B = %0d Res = %0d Z = %0b", xtn.ALUCtrl_i, xtn.dataA_i, xtn.dataB_i, xtn.ALUResult_o, xtn.Zero_o), UVM_LOW)
+end
+
+    else begin
+      `uvm_error("SCB_FAIL", $sformatf("FAIL  ctol = %0d A = %0d B = %0d Exp = %0d Act = %0d Z = %0b", xtn.ALUCtrl_i, xtn.dataA_i, xtn.dataB_i, exp_result, xtn.ALUResult_o, exp_zero))
+
+end
+
+cov_xtn = xtn;
+alu_cg.sample();
+  endfunction
+
+endclass

@@ -1,0 +1,60 @@
+
+class alu_test extends uvm_test;
+  `uvm_component_utils(alu_test)
+
+  alu_env env;
+  alu_env_config env_cfg;
+  alu_agent_config m_cfg;
+
+  function new(string name = "alu_test", uvm_component parent);
+    super.new(name, parent);
+  endfunction
+
+  virtual function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+
+    env_cfg = alu_env_config::type_id::create("env_cfg");
+    m_cfg = alu_agent_config::type_id::create("m_cfg");
+
+    if (!uvm_config_db #(virtual alu_if)::get(this, "", "vif", m_cfg.vif))
+      `uvm_fatal("VIF", "failed to get vif")
+
+    m_cfg.is_active = UVM_ACTIVE;
+    env_cfg.m_cfg = m_cfg;
+    env_cfg.has_scoreboard = 1;
+
+    uvm_config_db #(alu_env_config)::set(this, "*", "env_config", env_cfg);
+
+    env = alu_env::type_id::create("env", this);
+
+  endfunction
+
+
+virtual function void end_of_elaboration_phase(uvm_phase phase);
+        super.end_of_elaboration_phase(phase);
+        uvm_top.print_topology();
+endfunction
+
+  virtual task run_phase(uvm_phase phase);
+    alu_add_seq add_seq;
+    alu_rand_seq rand_seq;
+
+alu_zero_seq z_seq;
+
+    phase.raise_objection(this);
+    `uvm_info("TEST", "ADD SEQ", UVM_LOW)
+
+    add_seq = alu_add_seq::type_id::create("add_seq");
+    rand_seq = alu_rand_seq::type_id::create("rand_seq");
+
+z_seq = alu_zero_seq::type_id::create("z_seq");
+
+    add_seq.start(env.agent.sequencer);
+    rand_seq.start(env.agent.sequencer);
+
+   z_seq.start(env.agent.sequencer);
+
+    phase.drop_objection(this);
+  endtask
+
+endclass
